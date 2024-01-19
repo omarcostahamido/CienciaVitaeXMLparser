@@ -2,10 +2,14 @@
 <html>
 <head>
 	<meta charset="utf-8">
+	<meta name="autor" content="Omar Costa Hamido">
+	<meta name="description" content="Ciencia Vitae is the mandatory CV platform for FCT grantees. This website contains a Ciencia Vitae XML export parser, that saves the content in a table format.">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>CienciaVitae Parser</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<title>Ciencia Vitae XML parser</title>
 </head>
-<body>
+<body style="font-family: Avenir;">
+	<h1>Ciencia Vitae XML parser <a href="https://github.com/omarcostahamido/CienciaVitaeXMLparser" style="color: black;"><i class="fa-brands fa-github"></i></a></h1>
 	<input type="file" id="fileinput" />
 	<button id="parse" onclick="initialscope()" style="display: none; background: lawngreen;"> PARSE! </button>
 	<div id="log"></div>
