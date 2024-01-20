@@ -147,8 +147,45 @@
 				if (i>0) {parsedKeywords += ", "}
 				parsedKeywords += keywords[i].innerHTML
 			}
-			log += "<td>"+parsedKeywords+"</td></tr>";
+			log += "<td>"+parsedKeywords+"</td></tr></table>";
 			document.getElementById('identity').innerHTML = log;
+			parseOutputs(cienciaID);
+		}
+
+		function parseOutputs(cienciaID){
+			log = "";
+			var header = "<table><tr><th>ID</th><th>category</th><th>type</th>";
+			var columns = [];
+			var outputs = xmlDoc.getElementsByTagName("output:outputs")[0].childNodes;
+			for (var i = 0, count = outputs.length; i < count; i++) {
+				log += "<tr><td>"+cienciaID+"</td>";
+				log += "<td>"+outputs[i].childNodes[0].innerHTML+"</td>"; //category
+				log += "<td>"+outputs[i].childNodes[1].innerHTML+"</td>"; //type
+				// outputDetails(outputs[i].childNodes[2], columns);
+				log += "</tr>";
+			}
+			console.log(columns);
+			for (var i = 0; i < columns.length; i++) {
+				header += "<th>"+columns[i]+"</th>";
+			}
+			header += "</tr>";
+			log = header+log+"</table>";
+			document.getElementById('outputs').innerHTML = log;
+		}
+
+		function outputDetails(node,columns){
+			
+		}
+
+		function interateOutput(){
+			
+		}
+
+		function checkOuputColumns(key,columns){
+			if (!columns.indexOf(key)) {
+				columns.push(key)
+			}
+			return columns.indexOf(key);
 		}
 
     </script>
