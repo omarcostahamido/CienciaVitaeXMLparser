@@ -7,12 +7,48 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 	<title>Ciencia Vitae XML parser</title>
+	<style type="text/css">
+		body{
+			font-family: Avenir;
+		}
+		#parse {
+			display: none; 
+			background: lawngreen;
+		}
+		.tab {
+			display: none;
+		}
+		table {
+			border-collapse: collapse;
+		}
+		table, td, th {
+			border: 1px solid black;
+		}
+		tr:nth-child(even) {
+			background-color: #dddddd;
+		}
+	</style>
 </head>
-<body style="font-family: Avenir;">
+<body>
 	<h1>Ciencia Vitae XML parser <a href="https://github.com/omarcostahamido/CienciaVitaeXMLparser" style="color: black;"><i class="fa-brands fa-github"></i></a></h1>
 	<input type="file" id="fileinput" />
-	<button id="parse" onclick="initialscope()" style="display: none; background: lawngreen;"> PARSE! </button>
-	<div id="log"></div>
+	<button id="parse" onclick="initialscope()"> PARSE! </button>
+	<br>
+	<br>
+	<div id="tabs">
+		<button onclick="openTab(event)">log</button>
+		<button onclick="openTab(event)">identity</button>
+		<button onclick="openTab(event)">degrees</button>
+		<button onclick="openTab(event)">outputs</button>
+		<button onclick="openTab(event)">services</button>
+		<button onclick="openTab(event)">distinctions</button>
+	</div>
+	<div id="log" class="tab"><i>placeholder 1</i></div>
+	<div id="identity" class="tab"><i>placeholder 2</i></div>
+	<div id="degrees" class="tab"><i>placeholder 3</i></div>
+	<div id="outputs" class="tab"><i>placeholder 4</i></div>
+	<div id="services" class="tab"><i>placeholder 5</i></div>
+	<div id="distinctions" class="tab"><i>placeholder 6</i></div>
     <script type="text/javascript">
 		var content, parser, xmlDoc, depthspace;
 		parser = new DOMParser();
@@ -62,13 +98,12 @@
 		function iterateAndPrint(elem,depth){
 			if (elem.childNodes) {
 				for (var i = 0, count = elem.childNodes.length, thisdepth = depth+1; i < count; i++) {
-					// console.log("elem.childNodes.length: ",elem.childNodes.length);
 					if (elem.childNodes[i].nodeName != "#text") {
-						console.log(elem.childNodes[i].nodeName," depth: ",thisdepth);
+						// console.log(elem.childNodes[i].nodeName," depth: ",thisdepth);
 						log += indentation(thisdepth)+elem.childNodes[i].nodeName+" depth: "+thisdepth+"<br>";
 						iterateAndPrint(elem.childNodes[i],thisdepth);
 					} else {
-						console.log(elem.innerHTML," depth: ",thisdepth);
+						// console.log(elem.innerHTML," depth: ",thisdepth);
 						log += "<strong>"+indentation(thisdepth)+elem.innerHTML+"</strong>"+"<br>";
 					}
 				}
@@ -76,9 +111,44 @@
 		}
 
 		function initialscope(){
+			log = "";
 			curr = xmlDoc.getElementsByTagName("curriculum:curriculum")[0];
 			iterateAndPrint(curr,0);
 			document.getElementById('log').innerHTML = log;
+			parseIdentity();
+		}
+
+		function openTab(e) {
+			var tabs = document.getElementsByClassName("tab");
+			for (i = 0; i < tabs.length; i++) {
+				tabs[i].style.display = "none";
+			}
+			document.getElementById(e.currentTarget.innerHTML).style.display = "block";
+		}
+		
+		function parseIdentity(){
+			log = "";
+			log += "<table><tr><th>ID</th><th>full-name</th><th>citation-name</th><th>research-classification</th><th>topic</th><th>keywords</th></tr>";
+			var cienciaID;
+			var authorIdentifiers = xmlDoc.getElementsByTagName("author-identifier:author-identifiers")[0].childNodes;
+			for (var i = 0; i < authorIdentifiers.length; i++) {
+				if (authorIdentifiers[i].childNodes[0].innerHTML == "Ciência ID") {
+					cienciaID = authorIdentifiers[i].childNodes[1].innerHTML
+				}
+			}
+			log += "<tr><td>"+cienciaID+"</td>";
+			log += "<td>"+xmlDoc.getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
+			log += "<td>"+xmlDoc.getElementsByTagName("citation-name:citation-name")[0].innerHTML+"</td>";
+			log += "<td>"+xmlDoc.getElementsByTagName("common:research-classification")[0].innerHTML+"</td>";
+			log += "<td>"+xmlDoc.getElementsByTagName("domain-activity:topic")[0].innerHTML+"</td>";
+			var keywords = xmlDoc.getElementsByTagName("common:keywords")[0].childNodes;
+			var parsedKeywords = "";
+			for (var i = 0; i < keywords.length; i++) {
+				if (i>0) {parsedKeywords += ", "}
+				parsedKeywords += keywords[i].innerHTML
+			}
+			log += "<td>"+parsedKeywords+"</td></tr>";
+			document.getElementById('identity').innerHTML = log;
 		}
 
     </script>
