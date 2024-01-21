@@ -50,7 +50,7 @@
 	<div id="services" class="tab"><i>placeholder 5</i></div>
 	<div id="distinctions" class="tab"><i>placeholder 6</i></div>
     <script type="text/javascript">
-		var content, parser, xmlDoc, depthspace;
+		var content, parser, xmlDoc, depthspace, headers, current_column, previous_column;
 		parser = new DOMParser();
 		const space = "&nbsp;&nbsp;&nbsp;&nbsp;";
 		var log = "";
@@ -154,38 +154,90 @@
 
 		function parseOutputs(cienciaID){
 			log = "";
-			var header = "<table><tr><th>ID</th><th>category</th><th>type</th>";
-			var columns = [];
+			var header = "<table><tr><th>ID</th><th>full-name</th><th>category</th><th>type</th>";
+			headers = [];
 			var outputs = xmlDoc.getElementsByTagName("output:outputs")[0].childNodes;
 			for (var i = 0, count = outputs.length; i < count; i++) {
 				log += "<tr><td>"+cienciaID+"</td>";
+				log += "<td>"+xmlDoc.getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
 				log += "<td>"+outputs[i].childNodes[0].innerHTML+"</td>"; //category
 				log += "<td>"+outputs[i].childNodes[1].innerHTML+"</td>"; //type
-				// outputDetails(outputs[i].childNodes[2], columns);
+				current_column = 0;
+				previous_column = "";
+				outputDetails(outputs[i].childNodes[2]);
 				log += "</tr>";
 			}
-			console.log(columns);
-			for (var i = 0; i < columns.length; i++) {
-				header += "<th>"+columns[i]+"</th>";
+			// console.log("headers: ",headers);
+			for (var i = 0; i < headers.length; i++) {
+				header += "<th>"+headers[i]+"</th>";
 			}
 			header += "</tr>";
 			log = header+log+"</table>";
 			document.getElementById('outputs').innerHTML = log;
-		}
-
-		function outputDetails(node,columns){
-			
-		}
-
-		function interateOutput(){
-			
-		}
-
-		function checkOuputColumns(key,columns){
-			if (!columns.indexOf(key)) {
-				columns.push(key)
+			//complete trailing cells
+			var tlenght = document.getElementById("outputs").childNodes[0].childNodes[0].childNodes[0].childNodes.length; //table > tbody > tr > th's
+			console.log("tlenght: ",tlenght);
+			var trows   = document.getElementById("outputs").childNodes[0].childNodes[0].childNodes.length;
+			console.log("trows: ",trows);
+			for (var i = 0; i < trows; i++) {
+				// console.log("current_row #",i);
+				var current_row = document.getElementById("outputs").childNodes[0].childNodes[0].childNodes[i];
+				// console.log("current_row: ",current_row);
+				var current_cell = current_row.childNodes.length;
+				while (current_cell < tlenght) {
+					current_row.insertCell(-1);
+					// console.log("current_cell: ", current_cell);
+					// console.log("added one cell");
+					current_cell ++;
+				}
 			}
-			return columns.indexOf(key);
+		}
+
+		function outputDetails(node){
+			if (node.childNodes) {
+				for (var i = 0, count = node.childNodes.length; i < count; i++) {
+					if (node.childNodes[i].nodeName != "#text") {
+						//we need to continue digging deeper
+						outputDetails(node.childNodes[i]);
+					} else {
+						//check the column name
+						var cname = node.nodeName;
+						//check where it is
+						if (previous_column == cname) {
+							log = log.slice(0,-5);
+							log += ", "+node.innerHTML+"</td>";
+						} else {
+							var target = checkOuputColumns(cname);
+							log += emptyCells(current_column,target)+"<td>"+node.innerHTML+"</td>";
+							current_column = target;
+							previous_column = cname;
+						}
+					}
+				}
+			}
+		}
+
+		function emptyCells(current,target){
+			var result = "";
+			for (var i = 1; i < (target-current); i++) {
+				result += "<td></td>";
+			}
+			return result;
+		}
+
+		function checkOuputColumns(key){
+			if (headers.indexOf(key)== -1) {
+				headers.push(key)
+			}
+			return headers.indexOf(key);
+		}
+
+		function copytable(el) {
+		    var urlField = document.getElementById(el)   
+		    var range = document.createRange()
+		    range.selectNode(urlField)
+		    window.getSelection().addRange(range) 
+		    document.execCommand('copy')
 		}
 
     </script>
