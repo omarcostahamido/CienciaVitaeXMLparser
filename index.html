@@ -15,6 +15,10 @@
 			display: none; 
 			background: lawngreen;
 		}
+		#copy {
+			display: none;
+			background: aqua;
+		}
 		.tab {
 			display: none;
 		}
@@ -33,6 +37,7 @@
 	<h1>Ciencia Vitae XML parser <a href="https://github.com/omarcostahamido/CienciaVitaeXMLparser" style="color: black;"><i class="fa-brands fa-github"></i></a></h1>
 	<input type="file" id="fileinput" />
 	<button id="parse" onclick="initialscope()"> PARSE! </button>
+	<button id="copy" onclick="copytable('log')"> copy! </button>
 	<br>
 	<br>
 	<div id="tabs">
@@ -50,7 +55,7 @@
 	<div id="services" class="tab"><i>placeholder 5</i></div>
 	<div id="distinctions" class="tab"><i>placeholder 6</i></div>
     <script type="text/javascript">
-		var content, parser, xmlDoc, depthspace, headers, current_column, previous_column;
+		var content, parser, xmlDoc, depthspace, headers;
 		parser = new DOMParser();
 		const space = "&nbsp;&nbsp;&nbsp;&nbsp;";
 		var log = "";
@@ -76,10 +81,6 @@
 			      document.getElementById('parse').style.display = 'inline-block';
 			  }
 			  r.readAsText(f);
-			  // print2console();
-  
-			  // document.getElementById("demo").innerHTML =
-			  // xmlDoc.getElementsByTagName("title")[0].childNodes[0].nodeValue;
 
 			} else { 
 			  alert("Failed to load file");
@@ -116,6 +117,8 @@
 			iterateAndPrint(curr,0);
 			document.getElementById('log').innerHTML = log;
 			parseIdentity();
+			document.getElementById('log').style.display = "block";
+			document.getElementById('copy').style.display = 'inline-block';
 		}
 
 		function openTab(e) {
@@ -123,7 +126,9 @@
 			for (i = 0; i < tabs.length; i++) {
 				tabs[i].style.display = "none";
 			}
-			document.getElementById(e.currentTarget.innerHTML).style.display = "block";
+			var foreground = e.currentTarget.innerHTML;
+			document.getElementById(foreground).style.display = "block";
+			document.getElementById("copy").onclick = function () { copytable(foreground); };
 		}
 		
 		function parseIdentity(){
@@ -162,12 +167,13 @@
 				log += "<td>"+xmlDoc.getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
 				log += "<td>"+outputs[i].childNodes[0].innerHTML+"</td>"; //category
 				log += "<td>"+outputs[i].childNodes[1].innerHTML+"</td>"; //type
-				current_column = 0;
-				previous_column = "";
-				outputDetails(outputs[i].childNodes[2]);
+				var items = Array(headers.length).fill("");
+				outputDetails(outputs[i].childNodes[2],items);
+				for (var j = 0; j < items.length; j++) {
+					log += "<td>"+items[j]+"</td>";
+				}
 				log += "</tr>";
 			}
-			// console.log("headers: ",headers);
 			for (var i = 0; i < headers.length; i++) {
 				header += "<th>"+headers[i]+"</th>";
 			}
@@ -176,53 +182,36 @@
 			document.getElementById('outputs').innerHTML = log;
 			//complete trailing cells
 			var tlenght = document.getElementById("outputs").childNodes[0].childNodes[0].childNodes[0].childNodes.length; //table > tbody > tr > th's
-			console.log("tlenght: ",tlenght);
 			var trows   = document.getElementById("outputs").childNodes[0].childNodes[0].childNodes.length;
-			console.log("trows: ",trows);
 			for (var i = 0; i < trows; i++) {
-				// console.log("current_row #",i);
 				var current_row = document.getElementById("outputs").childNodes[0].childNodes[0].childNodes[i];
-				// console.log("current_row: ",current_row);
 				var current_cell = current_row.childNodes.length;
 				while (current_cell < tlenght) {
 					current_row.insertCell(-1);
-					// console.log("current_cell: ", current_cell);
-					// console.log("added one cell");
 					current_cell ++;
 				}
 			}
 		}
 
-		function outputDetails(node){
+		function outputDetails(node,items){
 			if (node.childNodes) {
 				for (var i = 0, count = node.childNodes.length; i < count; i++) {
 					if (node.childNodes[i].nodeName != "#text") {
 						//we need to continue digging deeper
-						outputDetails(node.childNodes[i]);
+						outputDetails(node.childNodes[i],items);
 					} else {
 						//check the column name
 						var cname = node.nodeName;
 						//check where it is
-						if (previous_column == cname) {
-							log = log.slice(0,-5);
-							log += ", "+node.innerHTML+"</td>";
+						var target = checkOuputColumns(cname);
+						if (items[target]) {
+							items[target] += ", "+node.innerHTML;
 						} else {
-							var target = checkOuputColumns(cname);
-							log += emptyCells(current_column,target)+"<td>"+node.innerHTML+"</td>";
-							current_column = target;
-							previous_column = cname;
+							items[target] = node.innerHTML;
 						}
 					}
 				}
 			}
-		}
-
-		function emptyCells(current,target){
-			var result = "";
-			for (var i = 1; i < (target-current); i++) {
-				result += "<td></td>";
-			}
-			return result;
 		}
 
 		function checkOuputColumns(key){
