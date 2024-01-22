@@ -35,7 +35,7 @@
 </head>
 <body>
 	<h1>Ciencia Vitae XML parser <a href="https://github.com/omarcostahamido/CienciaVitaeXMLparser" style="color: black;"><i class="fa-brands fa-github"></i></a></h1>
-	<input type="file" id="fileinput" />
+	<input type="file" id="fileinput" multiple />
 	<button id="parse" onclick="initialscope()"> PARSE! </button>
 	<button id="copy" onclick="copytable('log')"> copy! </button>
 	<br>
@@ -48,46 +48,53 @@
 		<button onclick="openTab(event)">services</button>
 		<button onclick="openTab(event)">distinctions</button>
 	</div>
-	<div id="log" class="tab"><i>placeholder 1</i></div>
-	<div id="identity" class="tab"><i>placeholder 2</i></div>
-	<div id="degrees" class="tab"><i>placeholder 3</i></div>
-	<div id="outputs" class="tab"><i>placeholder 4</i></div>
-	<div id="services" class="tab"><i>placeholder 5</i></div>
-	<div id="distinctions" class="tab"><i>placeholder 6</i></div>
+	<div id="log" class="tab"></div>
+	<div id="identity" class="tab"></div>
+	<div id="degrees" class="tab"></div>
+	<div id="outputs" class="tab"></div>
+	<div id="services" class="tab"></div>
+	<div id="distinctions" class="tab"></div>
     <script type="text/javascript">
-		var content, parser, xmlDoc, depthspace, headers;
+		var content, parser, depthspace, headers;
 		parser = new DOMParser();
 		const space = "&nbsp;&nbsp;&nbsp;&nbsp;";
 		var log = "";
+		var xmlDocs = [];
 
-		function readSingleFile(evt) {
+		function readMultipleFiles(evt) {
 			//Retrieve the first (and only!) File from the FileList object
-			var f = evt.target.files[0]; 
-
-			if (f) {
-			  var r = new FileReader();
-			  r.onload = function(e) { 
-			      content = e.target.result;
-			      console.log( "Got the file.\n" 
-			            +"name: " + f.name + "\n"
-			            +"type: " + f.type + "\n"
-			            +"size: " + f.size + " bytes\n"
-			            // + "starts with: " + content.substr(1, content.indexOf("\n"))
-			            + "starts with: " + content.substr(1, 100)
-			            + "..."
-			            );  
-			      xmlDoc = parser.parseFromString(content,"text/xml");
-			      // document.getElementById('parse').value = content;
+			var f = evt.target.files; 
+			var idx = 0;
+			function readSingleFile(file){
+				if (file) {
+				  var r = new FileReader();
+				  r.onload = function(e) { 
+				      content = e.target.result;
+				      console.log( "Got the file.\n" 
+				            +"name: " + file.name + "\n"
+				            +"type: " + file.type + "\n"
+				            +"size: " + file.size + " bytes\n"
+				            // + "starts with: " + content.substr(1, content.indexOf("\n"))
+				            + "starts with: " + content.substr(1, 100)
+				            + "..."
+				            );  
+				      xmlDocs[idx] = parser.parseFromString(content,"text/xml");
+				      idx ++;
+				      // document.getElementById('parse').value = content;
+				  }
+				  r.readAsText(file);
 			      document.getElementById('parse').style.display = 'inline-block';
-			  }
-			  r.readAsText(f);
 
-			} else { 
-			  alert("Failed to load file");
+				} else { 
+				  alert("Failed to load file");
+				}
+			}
+			for (var l = 0; l < f.length; l++) {
+				readSingleFile(f[l]);
 			}
 		}
 
-		document.getElementById('fileinput').addEventListener('change', readSingleFile, false);
+		document.getElementById('fileinput').addEventListener('change', readMultipleFiles, false);
 
 		function indentation(depth){
 			var result = "";
@@ -112,11 +119,13 @@
 		}
 
 		function initialscope(){
-			log = "";
-			curr = xmlDoc.getElementsByTagName("curriculum:curriculum")[0];
-			iterateAndPrint(curr,0);
-			document.getElementById('log').innerHTML = log;
-			parseIdentity();
+			for (var k = 0; k < xmlDocs.length; k++) {
+				log = document.getElementById('log').innerHTML;
+				curr = xmlDocs[k].getElementsByTagName("curriculum:curriculum")[0];
+				iterateAndPrint(curr,0);
+				document.getElementById('log').innerHTML = log;
+				parseIdentity(k);
+			}
 			document.getElementById('log').style.display = "block";
 			document.getElementById('copy').style.display = 'inline-block';
 		}
@@ -131,22 +140,22 @@
 			document.getElementById("copy").onclick = function () { copytable(foreground); };
 		}
 		
-		function parseIdentity(){
-			log = "";
+		function parseIdentity(k){
+			log = document.getElementById('identity').innerHTML;
 			log += "<table><tr><th>ID</th><th>full-name</th><th>citation-name</th><th>research-classification</th><th>topic</th><th>keywords</th></tr>";
 			var cienciaID;
-			var authorIdentifiers = xmlDoc.getElementsByTagName("author-identifier:author-identifiers")[0].childNodes;
+			var authorIdentifiers = xmlDocs[k].getElementsByTagName("author-identifier:author-identifiers")[0].childNodes;
 			for (var i = 0; i < authorIdentifiers.length; i++) {
 				if (authorIdentifiers[i].childNodes[0].innerHTML == "Ciência ID") {
 					cienciaID = authorIdentifiers[i].childNodes[1].innerHTML
 				}
 			}
 			log += "<tr><td>"+cienciaID+"</td>";
-			log += "<td>"+xmlDoc.getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
-			log += "<td>"+xmlDoc.getElementsByTagName("citation-name:citation-name")[0].innerHTML+"</td>";
-			log += "<td>"+xmlDoc.getElementsByTagName("common:research-classification")[0].innerHTML+"</td>";
-			log += "<td>"+xmlDoc.getElementsByTagName("domain-activity:topic")[0].innerHTML+"</td>";
-			var keywords = xmlDoc.getElementsByTagName("common:keywords")[0].childNodes;
+			log += "<td>"+xmlDocs[k].getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
+			log += "<td>"+xmlDocs[k].getElementsByTagName("citation-name:citation-name")[0].innerHTML+"</td>";
+			log += "<td>"+xmlDocs[k].getElementsByTagName("common:research-classification")[0].innerHTML+"</td>";
+			log += "<td>"+xmlDocs[k].getElementsByTagName("domain-activity:topic")[0].innerHTML+"</td>";
+			var keywords = xmlDocs[k].getElementsByTagName("common:keywords")[0].childNodes;
 			var parsedKeywords = "";
 			for (var i = 0; i < keywords.length; i++) {
 				if (i>0) {parsedKeywords += ", "}
@@ -154,42 +163,51 @@
 			}
 			log += "<td>"+parsedKeywords+"</td></tr></table>";
 			document.getElementById('identity').innerHTML = log;
-			parseOutputs(cienciaID);
+			parseOutputs(cienciaID,k);
 		}
 
-		function parseOutputs(cienciaID){
-			log = "";
+		function parseOutputs(cienciaID,k){
+			log = document.getElementById('outputs').innerHTML;
+			console.log("log: ",log);
 			var header = "<table><tr><th>ID</th><th>full-name</th><th>category</th><th>type</th>";
-			headers = [];
-			var outputs = xmlDoc.getElementsByTagName("output:outputs")[0].childNodes;
+			var log2 = "";
+			if (k==0) {headers = [];}
+			var outputs = xmlDocs[k].getElementsByTagName("output:outputs")[0].childNodes;
 			for (var i = 0, count = outputs.length; i < count; i++) {
-				log += "<tr><td>"+cienciaID+"</td>";
-				log += "<td>"+xmlDoc.getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
-				log += "<td>"+outputs[i].childNodes[0].innerHTML+"</td>"; //category
-				log += "<td>"+outputs[i].childNodes[1].innerHTML+"</td>"; //type
+				log2 += "<tr><td>"+cienciaID+"</td>";
+				log2 += "<td>"+xmlDocs[k].getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
+				log2 += "<td>"+outputs[i].childNodes[0].innerHTML+"</td>"; //category
+				log2 += "<td>"+outputs[i].childNodes[1].innerHTML+"</td>"; //type
 				var items = Array(headers.length).fill("");
 				outputDetails(outputs[i].childNodes[2],items);
 				for (var j = 0; j < items.length; j++) {
-					log += "<td>"+items[j]+"</td>";
+					log2 += "<td>"+items[j]+"</td>";
 				}
-				log += "</tr>";
+				log2 += "</tr>";
 			}
-			for (var i = 0; i < headers.length; i++) {
-				header += "<th>"+headers[i]+"</th>";
-			}
-			header += "</tr>";
-			log = header+log+"</table>";
-			document.getElementById('outputs').innerHTML = log;
-			//complete trailing cells
-			var tlenght = document.getElementById("outputs").childNodes[0].childNodes[0].childNodes[0].childNodes.length; //table > tbody > tr > th's
-			var trows   = document.getElementById("outputs").childNodes[0].childNodes[0].childNodes.length;
-			for (var i = 0; i < trows; i++) {
-				var current_row = document.getElementById("outputs").childNodes[0].childNodes[0].childNodes[i];
-				var current_cell = current_row.childNodes.length;
-				while (current_cell < tlenght) {
-					current_row.insertCell(-1);
-					current_cell ++;
+			if (k==(xmlDocs.length-1)) {
+				for (var i = 0; i < headers.length; i++) {
+					header += "<th>"+headers[i]+"</th>";
 				}
+				header += "</tr>";
+				log = header+log+log2+"</table>";
+				document.getElementById('outputs').innerHTML = log;
+				//complete trailing cells
+				console.log("k: ",k);
+				var tlenght = document.getElementById("outputs").childNodes[k+1].childNodes[0].childNodes[0].childNodes.length; //table > tbody > tr > th's
+				var trows   = document.getElementById("outputs").childNodes[k+1].childNodes[0].childNodes.length;
+				for (var i = 0; i < trows; i++) {
+					var current_row = document.getElementById("outputs").childNodes[k+1].childNodes[0].childNodes[i];
+					var current_cell = current_row.childNodes.length;
+					while (current_cell < tlenght) {
+						current_row.insertCell(-1);
+						current_cell ++;
+					}
+				}
+			} else {
+				log += log2;
+				console.log(log);
+				document.getElementById('outputs').innerHTML = log;
 			}
 		}
 
