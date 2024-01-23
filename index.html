@@ -55,10 +55,11 @@
 	<div id="services" class="tab"></div>
 	<div id="distinctions" class="tab"></div>
     <script type="text/javascript">
-		var content, parser, depthspace, header, headers, cienciaID;
+		var content, parser, depthspace, header, cienciaID;
 		parser = new DOMParser();
 		const space = "&nbsp;&nbsp;&nbsp;&nbsp;";
 		var log = {};
+		var headers = {};
 		var xmlDocs = [];
 
 		function readMultipleFiles(evt) {
@@ -125,6 +126,9 @@
 			for (var k = 0; k < xmlDocs.length; k++) {
 				parseIdentity(k);
 				parseOutputs(k,"outputs","output:outputs");
+				parseOutputs(k,"degrees","degree:degrees");
+				parseOutputs(k,"services","service:services");
+				parseOutputs(k,"distinctions","distinction:distinctions");
 			}
 			document.getElementById('log').style.display = "block";
 			document.getElementById('copy').style.display = 'inline-block';
@@ -134,11 +138,9 @@
 			if (elem.childNodes) {
 				for (var i = 0, count = elem.childNodes.length, thisdepth = depth+1; i < count; i++) {
 					if (elem.childNodes[i].nodeName != "#text") {
-						// console.log(elem.childNodes[i].nodeName," depth: ",thisdepth);
 						log[0] += indentation(thisdepth)+elem.childNodes[i].nodeName+" depth: "+thisdepth+"<br>";
 						iterateAndPrint(elem.childNodes[i],thisdepth);
 					} else {
-						// console.log(elem.innerHTML," depth: ",thisdepth);
 						log[0] += "<strong>"+indentation(thisdepth)+elem.innerHTML+"</strong>"+"<br>";
 					}
 				}
@@ -170,31 +172,26 @@
 				document.getElementById('identity').innerHTML = log[1];
 				log[1] = ""
 			}
-			// parseOutputs(k,2);
 		}
 
 		function parseOutputs(k,el,tag){
 			if(k==0){log[el] = "";}
-			// header = "<table><tr><th>ID</th><th>full-name</th><th>category</th><th>type</th>";
 			header = "<table><tr><th>ID</th><th>full-name</th>";
-			if (k==0) {headers = [];}
+			if (k==0) {headers[el] = [];}
 			var outputs = xmlDocs[k].getElementsByTagName(tag)[0].childNodes;
 			for (var i = 0, count = outputs.length; i < count; i++) {
 				log[el] += "<tr><td>"+cienciaID+"</td>";
 				log[el] += "<td>"+xmlDocs[k].getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
-				// log[el] += "<td>"+outputs[i].childNodes[0].innerHTML+"</td>"; //category
-				// log[el] += "<td>"+outputs[i].childNodes[1].innerHTML+"</td>"; //type
-				var items = Array(headers.length).fill("");
-				// outputDetails(outputs[i].childNodes[2],items);
-				outputDetails(outputs[i],items);
+				var items = Array(headers[el].length).fill("");
+				outputDetails(outputs[i],items,el);
 				for (var j = 0; j < items.length; j++) {
 					log[el] += "<td>"+items[j]+"</td>";
 				}
 				log[el] += "</tr>";
 			}
 			if (k==(xmlDocs.length-1)) {
-				for (var i = 0; i < headers.length; i++) {
-					header += "<th>"+headers[i]+"</th>";
+				for (var i = 0; i < headers[el].length; i++) {
+					header += "<th>"+headers[el][i]+"</th>";
 				}
 				header += "</tr>";
 				log[el] = header+log[el]+"</table>";
@@ -214,17 +211,17 @@
 			}
 		}
 
-		function outputDetails(node,items){
+		function outputDetails(node,items,el){
 			if (node.childNodes) {
 				for (var i = 0, count = node.childNodes.length; i < count; i++) {
 					if (node.childNodes[i].nodeName != "#text") {
 						//we need to continue digging deeper
-						outputDetails(node.childNodes[i],items);
+						outputDetails(node.childNodes[i],items,el);
 					} else {
 						//check the column name
 						var cname = node.nodeName;
 						//check where it is
-						var target = checkOuputColumns(cname);
+						var target = checkOuputColumns(cname,el);
 						if (items[target]) {
 							items[target] += ", "+node.innerHTML;
 						} else {
@@ -235,11 +232,11 @@
 			}
 		}
 
-		function checkOuputColumns(key){
-			if (headers.indexOf(key)== -1) {
-				headers.push(key)
+		function checkOuputColumns(key,el){
+			if (headers[el].indexOf(key)== -1) {
+				headers[el].push(key)
 			}
-			return headers.indexOf(key);
+			return headers[el].indexOf(key);
 		}
 
 		function copytable(el) {
