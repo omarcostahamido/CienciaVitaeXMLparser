@@ -55,10 +55,10 @@
 	<div id="services" class="tab"></div>
 	<div id="distinctions" class="tab"></div>
     <script type="text/javascript">
-		var content, parser, depthspace, headers;
+		var content, parser, depthspace, header, headers, cienciaID;
 		parser = new DOMParser();
 		const space = "&nbsp;&nbsp;&nbsp;&nbsp;";
-		var log = "";
+		var log = {};
 		var xmlDocs = [];
 
 		function readMultipleFiles(evt) {
@@ -103,32 +103,6 @@
 			}
 			return result;
 		}
-		function iterateAndPrint(elem,depth){
-			if (elem.childNodes) {
-				for (var i = 0, count = elem.childNodes.length, thisdepth = depth+1; i < count; i++) {
-					if (elem.childNodes[i].nodeName != "#text") {
-						// console.log(elem.childNodes[i].nodeName," depth: ",thisdepth);
-						log += indentation(thisdepth)+elem.childNodes[i].nodeName+" depth: "+thisdepth+"<br>";
-						iterateAndPrint(elem.childNodes[i],thisdepth);
-					} else {
-						// console.log(elem.innerHTML," depth: ",thisdepth);
-						log += "<strong>"+indentation(thisdepth)+elem.innerHTML+"</strong>"+"<br>";
-					}
-				}
-			}
-		}
-
-		function initialscope(){
-			for (var k = 0; k < xmlDocs.length; k++) {
-				log = document.getElementById('log').innerHTML;
-				curr = xmlDocs[k].getElementsByTagName("curriculum:curriculum")[0];
-				iterateAndPrint(curr,0);
-				document.getElementById('log').innerHTML = log;
-				parseIdentity(k);
-			}
-			document.getElementById('log').style.display = "block";
-			document.getElementById('copy').style.display = 'inline-block';
-		}
 
 		function openTab(e) {
 			var tabs = document.getElementsByClassName("tab");
@@ -139,75 +113,104 @@
 			document.getElementById(foreground).style.display = "block";
 			document.getElementById("copy").onclick = function () { copytable(foreground); };
 		}
+
+		function initialscope(){
+			for (var k = 0; k < xmlDocs.length; k++) {
+				log[0] = document.getElementById('log').innerHTML;
+				curr = xmlDocs[k].getElementsByTagName("curriculum:curriculum")[0];
+				iterateAndPrint(curr,0);
+				document.getElementById('log').innerHTML = log[0];
+			}
+			log[0] = "";
+			for (var k = 0; k < xmlDocs.length; k++) {
+				parseIdentity(k);
+				parseOutputs(k,"outputs","output:outputs");
+			}
+			document.getElementById('log').style.display = "block";
+			document.getElementById('copy').style.display = 'inline-block';
+		}
+
+		function iterateAndPrint(elem,depth){
+			if (elem.childNodes) {
+				for (var i = 0, count = elem.childNodes.length, thisdepth = depth+1; i < count; i++) {
+					if (elem.childNodes[i].nodeName != "#text") {
+						// console.log(elem.childNodes[i].nodeName," depth: ",thisdepth);
+						log[0] += indentation(thisdepth)+elem.childNodes[i].nodeName+" depth: "+thisdepth+"<br>";
+						iterateAndPrint(elem.childNodes[i],thisdepth);
+					} else {
+						// console.log(elem.innerHTML," depth: ",thisdepth);
+						log[0] += "<strong>"+indentation(thisdepth)+elem.innerHTML+"</strong>"+"<br>";
+					}
+				}
+			}
+		}
 		
 		function parseIdentity(k){
-			log = document.getElementById('identity').innerHTML;
-			log += "<table><tr><th>ID</th><th>full-name</th><th>citation-name</th><th>research-classification</th><th>topic</th><th>keywords</th></tr>";
-			var cienciaID;
+			if(k==0){log[1] = "";}
 			var authorIdentifiers = xmlDocs[k].getElementsByTagName("author-identifier:author-identifiers")[0].childNodes;
 			for (var i = 0; i < authorIdentifiers.length; i++) {
 				if (authorIdentifiers[i].childNodes[0].innerHTML == "Ciência ID") {
 					cienciaID = authorIdentifiers[i].childNodes[1].innerHTML
 				}
 			}
-			log += "<tr><td>"+cienciaID+"</td>";
-			log += "<td>"+xmlDocs[k].getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
-			log += "<td>"+xmlDocs[k].getElementsByTagName("citation-name:citation-name")[0].innerHTML+"</td>";
-			log += "<td>"+xmlDocs[k].getElementsByTagName("common:research-classification")[0].innerHTML+"</td>";
-			log += "<td>"+xmlDocs[k].getElementsByTagName("domain-activity:topic")[0].innerHTML+"</td>";
+			log[1] += "<tr><td>"+cienciaID+"</td>";
+			log[1] += "<td>"+xmlDocs[k].getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
+			log[1] += "<td>"+xmlDocs[k].getElementsByTagName("citation-name:citation-name")[0].innerHTML+"</td>";
+			log[1] += "<td>"+xmlDocs[k].getElementsByTagName("common:research-classification")[0].innerHTML+"</td>";
+			log[1] += "<td>"+xmlDocs[k].getElementsByTagName("domain-activity:topic")[0].innerHTML+"</td>";
 			var keywords = xmlDocs[k].getElementsByTagName("common:keywords")[0].childNodes;
 			var parsedKeywords = "";
 			for (var i = 0; i < keywords.length; i++) {
 				if (i>0) {parsedKeywords += ", "}
 				parsedKeywords += keywords[i].innerHTML
 			}
-			log += "<td>"+parsedKeywords+"</td></tr></table>";
-			document.getElementById('identity').innerHTML = log;
-			parseOutputs(cienciaID,k);
+			log[1] += "<td>"+parsedKeywords+"</td></tr>";
+			if (k==(xmlDocs.length-1)) {
+				log[1] = "<table><tr><th>ID</th><th>full-name</th><th>citation-name</th><th>research-classification</th><th>topic</th><th>keywords</th></tr>"+log[1]+"</table>";
+				document.getElementById('identity').innerHTML = log[1];
+				log[1] = ""
+			}
+			// parseOutputs(k,2);
 		}
 
-		function parseOutputs(cienciaID,k){
-			log = document.getElementById('outputs').innerHTML;
-			console.log("log: ",log);
-			var header = "<table><tr><th>ID</th><th>full-name</th><th>category</th><th>type</th>";
-			var log2 = "";
+		function parseOutputs(k,el,tag){
+			if(k==0){log[el] = "";}
+			// header = "<table><tr><th>ID</th><th>full-name</th><th>category</th><th>type</th>";
+			header = "<table><tr><th>ID</th><th>full-name</th>";
 			if (k==0) {headers = [];}
-			var outputs = xmlDocs[k].getElementsByTagName("output:outputs")[0].childNodes;
+			var outputs = xmlDocs[k].getElementsByTagName(tag)[0].childNodes;
 			for (var i = 0, count = outputs.length; i < count; i++) {
-				log2 += "<tr><td>"+cienciaID+"</td>";
-				log2 += "<td>"+xmlDocs[k].getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
-				log2 += "<td>"+outputs[i].childNodes[0].innerHTML+"</td>"; //category
-				log2 += "<td>"+outputs[i].childNodes[1].innerHTML+"</td>"; //type
+				log[el] += "<tr><td>"+cienciaID+"</td>";
+				log[el] += "<td>"+xmlDocs[k].getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
+				// log[el] += "<td>"+outputs[i].childNodes[0].innerHTML+"</td>"; //category
+				// log[el] += "<td>"+outputs[i].childNodes[1].innerHTML+"</td>"; //type
 				var items = Array(headers.length).fill("");
-				outputDetails(outputs[i].childNodes[2],items);
+				// outputDetails(outputs[i].childNodes[2],items);
+				outputDetails(outputs[i],items);
 				for (var j = 0; j < items.length; j++) {
-					log2 += "<td>"+items[j]+"</td>";
+					log[el] += "<td>"+items[j]+"</td>";
 				}
-				log2 += "</tr>";
+				log[el] += "</tr>";
 			}
 			if (k==(xmlDocs.length-1)) {
 				for (var i = 0; i < headers.length; i++) {
 					header += "<th>"+headers[i]+"</th>";
 				}
 				header += "</tr>";
-				log = header+log+log2+"</table>";
-				document.getElementById('outputs').innerHTML = log;
+				log[el] = header+log[el]+"</table>";
+				document.getElementById(el).innerHTML = log[el];
+				log[el] = "";
 				//complete trailing cells
-				console.log("k: ",k);
-				var tlenght = document.getElementById("outputs").childNodes[k+1].childNodes[0].childNodes[0].childNodes.length; //table > tbody > tr > th's
-				var trows   = document.getElementById("outputs").childNodes[k+1].childNodes[0].childNodes.length;
+				var tlenght = document.getElementById(el).childNodes[0].childNodes[0].childNodes[0].childNodes.length; //table > tbody > tr > th's
+				var trows   = document.getElementById(el).childNodes[0].childNodes[0].childNodes.length;
 				for (var i = 0; i < trows; i++) {
-					var current_row = document.getElementById("outputs").childNodes[k+1].childNodes[0].childNodes[i];
+					var current_row = document.getElementById(el).childNodes[0].childNodes[0].childNodes[i];
 					var current_cell = current_row.childNodes.length;
 					while (current_cell < tlenght) {
 						current_row.insertCell(-1);
 						current_cell ++;
 					}
 				}
-			} else {
-				log += log2;
-				console.log(log);
-				document.getElementById('outputs').innerHTML = log;
 			}
 		}
 
