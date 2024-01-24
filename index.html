@@ -31,10 +31,28 @@
 		tr:nth-child(even) {
 			background-color: #dddddd;
 		}
+		a {
+			color: black;
+			font-family: math;
+			text-decoration: auto;
+		}
+
+		a:hover {
+			color: purple;
+		}
+
+		footer {
+			position: fixed;
+		    bottom: 0;
+		    background-color: white;
+		    width: 100%;
+		    text-align: center;
+		    padding: 10px 0;
+		}
 	</style>
 </head>
 <body>
-	<h1>Ciencia Vitae XML parser <a href="https://github.com/omarcostahamido/CienciaVitaeXMLparser" style="color: black;"><i class="fa-brands fa-github"></i></a></h1>
+	<h1>Ciencia Vitae XML parser <a href="https://github.com/omarcostahamido/CienciaVitaeXMLparser"><i class="fa-brands fa-github"></i></a></h1>
 	<input type="file" id="fileinput" multiple />
 	<button id="parse" onclick="initialscope()"> PARSE! </button>
 	<button id="copy" onclick="copytable('log')"> copy! </button>
@@ -54,6 +72,9 @@
 	<div id="outputs" class="tab"></div>
 	<div id="services" class="tab"></div>
 	<div id="distinctions" class="tab"></div>
+	<br>
+	<br>
+	<footer>Copyright © 2024 <a href="https://omarcostahamido.com">○—●—◩</a></footer>
     <script type="text/javascript">
 		var content, parser, depthspace, header, cienciaID;
 		parser = new DOMParser();
@@ -63,7 +84,7 @@
 		var xmlDocs = [];
 
 		function readMultipleFiles(evt) {
-			//Retrieve the first (and only!) File from the FileList object
+			//Retrieve files from the FileList object
 			var f = evt.target.files; 
 			var idx = 0;
 			function readSingleFile(file){
@@ -81,7 +102,6 @@
 				            );  
 				      xmlDocs[idx] = parser.parseFromString(content,"text/xml");
 				      idx ++;
-				      // document.getElementById('parse').value = content;
 				  }
 				  r.readAsText(file);
 			      document.getElementById('parse').style.display = 'inline-block';
@@ -248,7 +268,6 @@
 		}
 
     </script>
-    <br>
     
 </body>
 </html>
