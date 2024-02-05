@@ -199,36 +199,40 @@
 			if(k==0){log[el] = "";}
 			header = "<table><tr><th>ID</th><th>full-name</th>";
 			if (k==0) {headers[el] = [];}
-			var outputs = xmlDocs[k].getElementsByTagName(tag)[0].childNodes;
-			for (var i = 0, count = outputs.length; i < count; i++) {
-				log[el] += "<tr><td>"+cienciaID+"</td>";
-				log[el] += "<td>"+xmlDocs[k].getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
-				var items = Array(headers[el].length).fill("");
-				outputDetails(outputs[i],items,el);
-				for (var j = 0; j < items.length; j++) {
-					log[el] += "<td>"+items[j]+"</td>";
+			if (xmlDocs[k].getElementsByTagName(tag)[0]) {
+				var outputs = xmlDocs[k].getElementsByTagName(tag)[0].childNodes;
+				for (var i = 0, count = outputs.length; i < count; i++) {
+					log[el] += "<tr><td>"+cienciaID+"</td>";
+					log[el] += "<td>"+xmlDocs[k].getElementsByTagName("person-info:full-name")[0].innerHTML+"</td>";
+					var items = Array(headers[el].length).fill("");
+					outputDetails(outputs[i],items,el);
+					for (var j = 0; j < items.length; j++) {
+						log[el] += "<td>"+items[j]+"</td>";
+					}
+					log[el] += "</tr>";
 				}
-				log[el] += "</tr>";
-			}
-			if (k==(xmlDocs.length-1)) {
-				for (var i = 0; i < headers[el].length; i++) {
-					header += "<th>"+headers[el][i]+"</th>";
-				}
-				header += "</tr>";
-				log[el] = header+log[el]+"</table>";
-				document.getElementById(el).innerHTML = log[el];
-				log[el] = "";
-				//complete trailing cells
-				var tlenght = document.getElementById(el).childNodes[0].childNodes[0].childNodes[0].childNodes.length; //table > tbody > tr > th's
-				var trows   = document.getElementById(el).childNodes[0].childNodes[0].childNodes.length;
-				for (var i = 0; i < trows; i++) {
-					var current_row = document.getElementById(el).childNodes[0].childNodes[0].childNodes[i];
-					var current_cell = current_row.childNodes.length;
-					while (current_cell < tlenght) {
-						current_row.insertCell(-1);
-						current_cell ++;
+				if (k==(xmlDocs.length-1)) {
+					for (var i = 0; i < headers[el].length; i++) {
+						header += "<th>"+headers[el][i]+"</th>";
+					}
+					header += "</tr>";
+					log[el] = header+log[el]+"</table>";
+					document.getElementById(el).innerHTML = log[el];
+					log[el] = "";
+					//complete trailing cells
+					var tlenght = document.getElementById(el).childNodes[0].childNodes[0].childNodes[0].childNodes.length; //table > tbody > tr > th's
+					var trows   = document.getElementById(el).childNodes[0].childNodes[0].childNodes.length;
+					for (var i = 0; i < trows; i++) {
+						var current_row = document.getElementById(el).childNodes[0].childNodes[0].childNodes[i];
+						var current_cell = current_row.childNodes.length;
+						while (current_cell < tlenght) {
+							current_row.insertCell(-1);
+							current_cell ++;
+						}
 					}
 				}
+			} else {
+				document.getElementById('log').innerHTML += "<br><i><u>The file for "+cienciaID+" does not contain any "+el+" listed.</u></i>";
 			}
 		}
 
