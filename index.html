@@ -240,8 +240,23 @@
 			if (node.childNodes) {
 				for (var i = 0, count = node.childNodes.length; i < count; i++) {
 					if (node.childNodes[i].nodeName != "#text") {
-						//we need to continue digging deeper
-						outputDetails(node.childNodes[i],items,el);
+						//is it a date tag?
+						if (node.childNodes[i].getAttribute("year")) {
+							//check the column name
+							var cname = node.childNodes[i].nodeName;
+							//save year value
+							var thisyear = node.childNodes[i].getAttribute("year");
+							//check where it is
+							var target = checkOuputColumns(cname,el);
+							if (items[target]) {
+								items[target] += ", "+thisyear;
+							} else {
+								items[target] = thisyear;
+							}
+						} else {
+							//we need to continue digging deeper
+							outputDetails(node.childNodes[i],items,el);
+						}
 					} else {
 						//check the column name
 						var cname = node.nodeName;
